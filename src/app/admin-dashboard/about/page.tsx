@@ -134,12 +134,13 @@ export default function AboutPage() {
     profile?.fullName?.trim() || selectedProfile?.fullName || "Portfolio Owner";
   const currentConfig = itemModalConfig[itemModalSection];
 
-  const activeItems = useMemo(() => {
+  const activeItems = useMemo<(HeadlineItem | DescriptionItem | HighlightItem)[]>(() => {
     if (activeSection === "headline") return headlines;
     if (activeSection === "description") return descriptions;
     if (activeSection === "highlight") return highlights;
     return [];
   }, [activeSection, headlines, descriptions, highlights]);
+
 
   const extractErrorMessage = (error: unknown, fallback: string) => {
     if (error instanceof Error && error.message) return error.message;
@@ -774,7 +775,7 @@ export default function AboutPage() {
           textPlaceholder={currentConfig.textPlaceholder}
           showTypeField={currentConfig.showTypeField}
           multiline={currentConfig.multiline}
-          typeOptions={currentConfig.typeOptions}
+          typeOptions={[...currentConfig.typeOptions]}
           initialData={editingItem}
           profileId={profileId}
           onClose={closeItemModal}
