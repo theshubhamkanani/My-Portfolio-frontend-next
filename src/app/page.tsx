@@ -434,7 +434,7 @@ function SectionHeading({
       <p className="portfolio-mono text-xs uppercase tracking-[0.42em] text-[var(--portfolio-accent)]">
         {eyebrow}
       </p>
-      <h2 className="mt-4 text-4xl font-semibold leading-tight text-[var(--portfolio-text)] sm:text-5xl lg:text-6xl">
+      <h2 className="mt-4 text-3xl font-semibold leading-tight text-[var(--portfolio-text)] sm:text-5xl lg:text-6xl">
         {title}
       </h2>
       <div
@@ -901,32 +901,42 @@ export default function HomePage() {
           />
         </div>
 
-        <header className="fixed inset-x-0 top-0 z-[80] px-4 pt-4 sm:px-6 lg:px-8">
-          <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4 rounded-full border border-white/10 bg-[rgba(8,17,27,0.72)] px-4 py-3 shadow-[0_22px_70px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl sm:px-5">
-            <button
-              type="button"
-              onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-              className="flex items-center gap-3"
-            >
-              <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-sm font-semibold text-[var(--portfolio-sand)]">
-                {profileMonogram}
-              </span>
+        <header className="fixed inset-x-0 top-0 z-[80] px-3 pt-3 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl rounded-[28px] border border-white/10 bg-[rgba(8,17,27,0.78)] px-3 py-3 shadow-[0_22px_70px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl sm:px-5">
+            <div className="flex items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="flex min-w-0 items-center gap-3"
+              >
+                <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-sm font-semibold text-[var(--portfolio-sand)]">
+                  {profileMonogram}
+                </span>
 
-              <div className="hidden sm:block text-left">
-                <p className="text-sm font-medium text-[var(--portfolio-text)]">
-                  {displayName}
-                </p>
-              </div>
-            </button>
+                <div className="min-w-0 text-left">
+                  <p className="truncate text-sm font-medium text-[var(--portfolio-text)]">
+                    {displayName}
+                  </p>
+                </div>
+              </button>
 
-            <div className="portfolio-no-scrollbar flex flex-1 items-center justify-end gap-2 overflow-x-auto">
+              <button
+                type="button"
+                onClick={() => scrollToSection("contact")}
+                className="shrink-0 rounded-full bg-[linear-gradient(135deg,var(--portfolio-accent),var(--portfolio-accent-2))] px-4 py-3 text-xs font-semibold leading-tight text-[#091017] transition-transform duration-300 hover:-translate-y-0.5 sm:px-5 sm:text-sm"
+              >
+                Start a Conversation
+              </button>
+            </div>
+
+            <div className="portfolio-no-scrollbar mt-3 flex items-center gap-2 overflow-x-auto pb-1 sm:mt-4">
               {NAV_ITEMS.map((item) => (
                 <button
                   key={item.id}
                   type="button"
                   onClick={() => scrollToSection(item.id)}
                   className={cn(
-                    "whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300",
+                    "shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300",
                     activeSection === item.id
                       ? "bg-white/[0.08] text-[var(--portfolio-text)] shadow-[0_0_0_1px_rgba(255,255,255,0.1)]"
                       : "text-[var(--portfolio-muted)] hover:bg-white/[0.05] hover:text-[var(--portfolio-text)]"
@@ -935,22 +945,15 @@ export default function HomePage() {
                   {item.label}
                 </button>
               ))}
-
-              <button
-                type="button"
-                onClick={() => scrollToSection("contact")}
-                className="ml-1 inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--portfolio-accent),var(--portfolio-accent-2))] px-4 py-2.5 text-sm font-semibold text-[#091017] transition-transform duration-300 hover:-translate-y-0.5"
-              >
-                Start a Conversation
-              </button>
             </div>
           </div>
         </header>
 
+
         <section
           id="home"
           data-section="home"
-          className="scroll-mt-28 px-6 pb-24 pt-32 sm:px-8 lg:px-10 lg:pb-28 lg:pt-40"
+          className="scroll-mt-32 px-4 pb-20 pt-44 sm:px-8 sm:pb-24 sm:pt-36 lg:px-10 lg:pb-28 lg:pt-40"
         >
           <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
             <Reveal className="space-y-8">
@@ -967,7 +970,7 @@ export default function HomePage() {
                 <p className="portfolio-mono text-xs uppercase tracking-[0.42em] text-[var(--portfolio-muted)]">
                   Portfolio
                 </p>
-                <h1 className="max-w-5xl text-5xl font-semibold leading-[0.92] sm:text-6xl lg:text-[5.45rem]">
+                <h1 className="max-w-5xl text-[3.2rem] font-semibold leading-[0.96] sm:text-6xl lg:text-[5.45rem]">
                   <span className="block text-[var(--portfolio-text)]">Hello, I&apos;m</span>
                   <span className="mt-2 block text-[var(--portfolio-sand)] [text-shadow:0_12px_40px_rgba(245,213,154,0.08)]">
                     {heroFirstName}
@@ -1137,7 +1140,7 @@ export default function HomePage() {
         <section
           id="about"
           data-section="about"
-          className="scroll-mt-28 px-6 py-20 sm:px-8 lg:px-10 lg:py-28"
+          className="scroll-mt-32 px-4 py-20 sm:px-8 lg:px-10 lg:py-28"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal>
@@ -1685,7 +1688,7 @@ export default function HomePage() {
                     Start Here
                   </p>
 
-                  <h3 className="mt-4 text-3xl font-semibold leading-tight text-[var(--portfolio-text)]">
+                  <h3 className="mt-4 text-2xl font-semibold leading-tight text-[var(--portfolio-text)] sm:text-3xl">
                     Let’s talk about product, systems, or the next opportunity.
                   </h3>
 
@@ -1702,16 +1705,16 @@ export default function HomePage() {
                           href={item.href}
                           target={item.href.startsWith("mailto:") ? undefined : "_blank"}
                           rel={item.href.startsWith("mailto:") ? undefined : "noreferrer"}
-                          className="flex items-center gap-4 rounded-[24px] border border-white/8 bg-[#0d1620]/80 px-4 py-4 transition-all duration-300 hover:border-white/15 hover:bg-[#111b27]"
+                          className="flex items-start gap-4 rounded-[24px] border border-white/8 bg-[#0d1620]/80 px-4 py-4 transition-all duration-300 hover:border-white/15 hover:bg-[#111b27]"
                         >
                           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/[0.05] text-[var(--portfolio-accent)]">
                             {item.icon}
                           </span>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <p className="portfolio-mono text-[10px] uppercase tracking-[0.28em] text-[var(--portfolio-muted)]">
                               {item.label}
                             </p>
-                            <p className="mt-1 text-sm leading-6 text-[var(--portfolio-text)]">
+                            <p className="mt-1 break-all text-sm leading-6 text-[var(--portfolio-text)] sm:break-normal">
                               {item.value}
                             </p>
                           </div>
@@ -1719,16 +1722,16 @@ export default function HomePage() {
                       ) : (
                         <div
                           key={`${item.label}-${item.value}`}
-                          className="flex items-center gap-4 rounded-[24px] border border-white/8 bg-[#0d1620]/80 px-4 py-4"
+                          className="flex items-start gap-4 rounded-[24px] border border-white/8 bg-[#0d1620]/80 px-4 py-4"
                         >
                           <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-white/[0.05] text-[var(--portfolio-accent)]">
                             {item.icon}
                           </span>
-                          <div>
+                          <div className="min-w-0 flex-1">
                             <p className="portfolio-mono text-[10px] uppercase tracking-[0.28em] text-[var(--portfolio-muted)]">
                               {item.label}
                             </p>
-                            <p className="mt-1 text-sm leading-6 text-[var(--portfolio-text)]">
+                            <p className="mt-1 break-all text-sm leading-6 text-[var(--portfolio-text)] sm:break-normal">
                               {item.value}
                             </p>
                           </div>
@@ -1738,6 +1741,7 @@ export default function HomePage() {
                   </div>
                 </div>
               </Reveal>
+
 
               <Reveal delay={140}>
                 <form
@@ -1869,7 +1873,7 @@ export default function HomePage() {
           </div>
         </section>
 
-        <footer className="px-6 pb-10 pt-8 text-center sm:px-8 lg:px-10">
+        <footer className="px-4 pb-10 pt-8 text-center sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl border-t border-white/10 pt-8">
             <p className="text-sm text-[var(--portfolio-text)]">
               © 2026 {displayName}. All rights reserved.
