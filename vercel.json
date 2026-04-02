@@ -3,7 +3,7 @@
   "rewrites": [
     {
       "source": "/api/v1/:path*",
-      "destination": "https://my-portfolio-backend-java-v1.onrender.com"
+      "destination": "https://my-portfolio-backend-java-v1.onrender.com/api/v1/:path*"
     }
   ]
 }
