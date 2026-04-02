@@ -1,33 +1,36 @@
-import api from './api';
+import api from "./api";
+import { clearAdminTabToken, setAdminTabToken } from "./adminTabSession";
 
 export interface LoginRequest {
   email: string;
   password: string;
 }
 
-export interface AuthResponse {
-  token: string;
+interface LoginResponse {
+  message: string;
+  tabToken: string | null;
 }
 
-// 2. The Login Function
-export const loginUser = async (credentials: LoginRequest): Promise<AuthResponse> => {
+export const loginUser = async (credentials: LoginRequest): Promise<void> => {
   try {
-    const response = await api.post<AuthResponse>('/auth/login', credentials);
+    const response = await api.post<LoginResponse>("/auth/login", credentials);
 
-    // Save the token
-    if (response.data.token) {
-      sessionStorage.setItem('portfolio_token', response.data.token);
+    if (!response.data.tabToken) {
+      throw new Error("Missing tab token.");
     }
 
-    return response.data;
+    setAdminTabToken(response.data.tabToken);
   } catch (error) {
-    console.error("Login Error:", error);
+    clearAdminTabToken();
     throw error;
   }
 };
 
-// 3. The Logout Function
-export const logoutUser = () => {
-  sessionStorage.removeItem('portfolio_token');
-  window.location.href = '/';
+export const logoutUser = async (): Promise<void> => {
+  try {
+    await api.post("/auth/logout");
+  } finally {
+    clearAdminTabToken();
+    window.location.href = "/shubh-dev";
+  }
 };

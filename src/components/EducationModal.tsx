@@ -1,32 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Experience } from "@/services/experienceService";
-import { getAllSkills, Skill } from "@/services/skillService";
+import { Education } from "@/services/educationService";
 
-interface ExperienceModalProps {
+interface EducationModalProps {
   isOpen: boolean;
   isSubmitting: boolean;
   errorMessage: string;
   profileId: number | null;
   onClose: () => void;
-  onSave: (data: Experience) => Promise<void>;
-  initialData?: Experience | null;
+  onSave: (data: Education) => Promise<void>;
+  initialData?: Education | null;
 }
 
-const createEmptyExperience = (profileId?: number | null): Experience => ({
-  designation: "",
-  companyName: "",
-  location: "",
-  description: "",
-  startDate: "",
-  endDate: "",
-  isCurrentJob: false,
+const createEmptyEducation = (profileId?: number | null): Education => ({
+  degreeName: "",
+  instituteName: "",
+  fromDate: "",
+  toDate: "",
+  shortDescription: "",
   profileId: profileId ?? undefined,
-  skills: [],
 });
 
-export default function ExperienceModal({
+export default function EducationModal({
   isOpen,
   isSubmitting,
   errorMessage,
@@ -34,32 +30,11 @@ export default function ExperienceModal({
   onClose,
   onSave,
   initialData,
-}: ExperienceModalProps) {
-  const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
-  const [formData, setFormData] = useState<Experience>(
-    createEmptyExperience(profileId)
+}: EducationModalProps) {
+  const [formData, setFormData] = useState<Education>(
+    createEmptyEducation(profileId)
   );
-
-  useEffect(() => {
-    if (!isOpen) return;
-
-    const fetchSkills = async () => {
-      if (!profileId) {
-        setAvailableSkills([]);
-        return;
-      }
-
-      try {
-        const data = await getAllSkills(profileId);
-        setAvailableSkills(data);
-      } catch (error) {
-        console.error("Failed to fetch skills", error);
-        setAvailableSkills([]);
-      }
-    };
-
-    fetchSkills();
-  }, [isOpen, profileId]);
+  const [isPresent, setIsPresent] = useState(false);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -70,12 +45,13 @@ export default function ExperienceModal({
     if (initialData) {
       setFormData({
         ...initialData,
-        endDate: initialData.endDate ?? "",
+        toDate: initialData.toDate ?? "",
         profileId: initialData.profileId ?? profileId ?? undefined,
-        skills: [...(initialData.skills ?? [])],
       });
+      setIsPresent(!initialData.toDate);
     } else {
-      setFormData(createEmptyExperience(profileId));
+      setFormData(createEmptyEducation(profileId));
+      setIsPresent(false);
     }
 
     return () => {
@@ -91,29 +67,9 @@ export default function ExperienceModal({
     await onSave({
       ...formData,
       profileId: formData.profileId ?? profileId ?? undefined,
-      endDate: formData.isCurrentJob ? null : formData.endDate,
+      toDate: isPresent ? null : formData.toDate,
     });
   };
-
-  const handleSkillSelect = (skillName: string) => {
-    if (!skillName || formData.skills.includes(skillName)) return;
-
-    setFormData((prev) => ({
-      ...prev,
-      skills: [...prev.skills, skillName],
-    }));
-  };
-
-  const removeSkill = (skillToRemove: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      skills: prev.skills.filter((skill) => skill !== skillToRemove),
-    }));
-  };
-
-  const availableSkillOptions = availableSkills.filter(
-    (skill) => !formData.skills.includes(skill.name)
-  );
 
   return (
     <div
@@ -121,20 +77,20 @@ export default function ExperienceModal({
       onClick={onClose}
     >
       <div
-        className="mx-auto flex w-full max-w-4xl flex-col overflow-hidden rounded-[30px] border border-slate-700 bg-slate-900 text-white shadow-[0_32px_80px_-30px_rgba(15,23,42,0.95)]"
+        className="mx-auto flex w-full max-w-3xl flex-col overflow-hidden rounded-[30px] border border-slate-700 bg-slate-900 text-white shadow-[0_32px_80px_-30px_rgba(15,23,42,0.95)]"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="shrink-0 border-b border-slate-800 px-5 py-5 sm:px-6">
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-400">
-                Work Experience
+                Education
               </p>
               <h2 className="mt-3 text-2xl font-semibold text-white">
-                {initialData ? "Edit Experience" : "Add Experience"}
+                {initialData ? "Edit Education" : "Add Education"}
               </h2>
               <p className="mt-2 text-sm text-slate-400">
-                Add your real experience only.
+                Add your academic journey in the same premium admin style.
               </p>
             </div>
 
@@ -162,16 +118,16 @@ export default function ExperienceModal({
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Designation
+                    Degree Name
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.designation}
+                    value={formData.degreeName}
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        designation: event.target.value,
+                        degreeName: event.target.value,
                       }))
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
@@ -180,16 +136,16 @@ export default function ExperienceModal({
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Company Name
+                    Institute Name
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.companyName}
+                    value={formData.instituteName}
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        companyName: event.target.value,
+                        instituteName: event.target.value,
                       }))
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
@@ -200,16 +156,16 @@ export default function ExperienceModal({
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Start Date
+                    From Date
                   </label>
                   <input
                     type="date"
                     required
-                    value={formData.startDate}
+                    value={formData.fromDate}
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        startDate: event.target.value,
+                        fromDate: event.target.value,
                       }))
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
@@ -218,17 +174,17 @@ export default function ExperienceModal({
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
-                    End Date
+                    To Date
                   </label>
                   <input
                     type="date"
-                    required={!formData.isCurrentJob}
-                    disabled={formData.isCurrentJob}
-                    value={formData.endDate ?? ""}
+                    required={!isPresent}
+                    disabled={isPresent}
+                    value={formData.toDate ?? ""}
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        endDate: event.target.value,
+                        toDate: event.target.value,
                       }))
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
@@ -240,36 +196,21 @@ export default function ExperienceModal({
                 <input
                   type="checkbox"
                   className="h-4 w-4 accent-blue-600"
-                  checked={formData.isCurrentJob}
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      isCurrentJob: event.target.checked,
-                      endDate: event.target.checked ? "" : prev.endDate,
-                    }))
-                  }
-                />
-                <span>I currently work here</span>
-              </label>
+                  checked={isPresent}
+                  onChange={(event) => {
+                    const checked = event.target.checked;
+                    setIsPresent(checked);
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.location}
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      location: event.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Bangalore, India"
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
+                    if (checked) {
+                      setFormData((prev) => ({
+                        ...prev,
+                        toDate: "",
+                      }));
+                    }
+                  }}
                 />
-              </div>
+                <span>I am currently studying here</span>
+              </label>
 
               <div>
                 <label className="mb-2 block text-sm font-medium text-slate-300">
@@ -278,74 +219,16 @@ export default function ExperienceModal({
                 <textarea
                   required
                   rows={5}
-                  value={formData.description}
+                  value={formData.shortDescription}
                   onChange={(event) =>
                     setFormData((prev) => ({
                       ...prev,
-                      description: event.target.value,
+                      shortDescription: event.target.value,
                     }))
                   }
-                  placeholder="Describe your responsibilities, impact, and achievements..."
+                  placeholder="Write about your studies, achievements, specialization, or highlights..."
                   className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
                 />
-              </div>
-
-              <div className="rounded-[26px] border border-slate-800 bg-slate-950/70 p-5">
-                <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-medium text-slate-200">Linked Skills</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      Attach any matching skills from the selected profile.
-                    </p>
-                  </div>
-
-                  <div className="w-fit rounded-full border border-slate-800 bg-slate-900 px-3 py-1 text-xs text-slate-400">
-                    {formData.skills.length} selected
-                  </div>
-                </div>
-
-                <div className="mt-4">
-                  <select
-                    className="w-full rounded-2xl border border-slate-700 bg-slate-900 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
-                    onChange={(event) => handleSkillSelect(event.target.value)}
-                    value=""
-                  >
-                    <option value="" disabled>
-                      {availableSkillOptions.length > 0
-                        ? "Choose a skill..."
-                        : "No more skills available for this profile"}
-                    </option>
-                    {availableSkillOptions.map((skill) => (
-                      <option key={skill.id} value={skill.name}>
-                        {skill.name}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div className="mt-4 flex min-h-[36px] flex-wrap gap-2">
-                  {formData.skills.length > 0 ? (
-                    formData.skills.map((skill) => (
-                      <span
-                        key={skill}
-                        className="flex items-center gap-2 rounded-full border border-blue-500/20 bg-blue-500/10 px-3 py-1.5 text-sm text-blue-200"
-                      >
-                        {skill}
-                        <button
-                          type="button"
-                          onClick={() => removeSkill(skill)}
-                          className="flex h-5 w-5 items-center justify-center rounded-full text-blue-300 transition-colors hover:bg-blue-500/20 hover:text-white"
-                        >
-                          x
-                        </button>
-                      </span>
-                    ))
-                  ) : (
-                    <span className="text-sm italic text-slate-500">
-                      No skills linked yet.
-                    </span>
-                  )}
-                </div>
               </div>
             </div>
           </div>
@@ -372,7 +255,7 @@ export default function ExperienceModal({
                     : "Creating..."
                   : initialData
                     ? "Save Changes"
-                    : "Create Experience"}
+                    : "Create Education"}
               </button>
             </div>
           </div>

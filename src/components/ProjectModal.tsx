@@ -1,32 +1,34 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Experience } from "@/services/experienceService";
+import { Project } from "@/services/projectService";
 import { getAllSkills, Skill } from "@/services/skillService";
 
-interface ExperienceModalProps {
+interface ProjectModalProps {
   isOpen: boolean;
   isSubmitting: boolean;
   errorMessage: string;
   profileId: number | null;
   onClose: () => void;
-  onSave: (data: Experience) => Promise<void>;
-  initialData?: Experience | null;
+  onSave: (data: Project) => Promise<void>;
+  initialData?: Project | null;
 }
 
-const createEmptyExperience = (profileId?: number | null): Experience => ({
+const createEmptyProject = (profileId?: number | null): Project => ({
+  projectName: "",
+  organizationName: "",
   designation: "",
-  companyName: "",
-  location: "",
   description: "",
+  githubLink: "",
+  liveLink: "",
   startDate: "",
   endDate: "",
-  isCurrentJob: false,
+  isCurrentProject: false,
   profileId: profileId ?? undefined,
   skills: [],
 });
 
-export default function ExperienceModal({
+export default function ProjectModal({
   isOpen,
   isSubmitting,
   errorMessage,
@@ -34,11 +36,9 @@ export default function ExperienceModal({
   onClose,
   onSave,
   initialData,
-}: ExperienceModalProps) {
+}: ProjectModalProps) {
   const [availableSkills, setAvailableSkills] = useState<Skill[]>([]);
-  const [formData, setFormData] = useState<Experience>(
-    createEmptyExperience(profileId)
-  );
+  const [formData, setFormData] = useState<Project>(createEmptyProject(profileId));
 
   useEffect(() => {
     if (!isOpen) return;
@@ -70,12 +70,14 @@ export default function ExperienceModal({
     if (initialData) {
       setFormData({
         ...initialData,
+        githubLink: initialData.githubLink ?? "",
+        liveLink: initialData.liveLink ?? "",
         endDate: initialData.endDate ?? "",
         profileId: initialData.profileId ?? profileId ?? undefined,
         skills: [...(initialData.skills ?? [])],
       });
     } else {
-      setFormData(createEmptyExperience(profileId));
+      setFormData(createEmptyProject(profileId));
     }
 
     return () => {
@@ -91,7 +93,9 @@ export default function ExperienceModal({
     await onSave({
       ...formData,
       profileId: formData.profileId ?? profileId ?? undefined,
-      endDate: formData.isCurrentJob ? null : formData.endDate,
+      githubLink: formData.githubLink?.trim() || null,
+      liveLink: formData.liveLink?.trim() || null,
+      endDate: formData.isCurrentProject ? null : formData.endDate,
     });
   };
 
@@ -128,13 +132,13 @@ export default function ExperienceModal({
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-400">
-                Work Experience
+                Projects
               </p>
               <h2 className="mt-3 text-2xl font-semibold text-white">
-                {initialData ? "Edit Experience" : "Add Experience"}
+                {initialData ? "Edit Project" : "Add Project"}
               </h2>
               <p className="mt-2 text-sm text-slate-400">
-                Add your real experience only.
+                Add your best builds, production work, and serious experiments.
               </p>
             </div>
 
@@ -162,16 +166,16 @@ export default function ExperienceModal({
               <div className="grid gap-5 md:grid-cols-2">
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Designation
+                    Project Name
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.designation}
+                    value={formData.projectName}
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        designation: event.target.value,
+                        projectName: event.target.value,
                       }))
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
@@ -180,21 +184,40 @@ export default function ExperienceModal({
 
                 <div>
                   <label className="mb-2 block text-sm font-medium text-slate-300">
-                    Company Name
+                    Company / University Name
                   </label>
                   <input
                     type="text"
                     required
-                    value={formData.companyName}
+                    value={formData.organizationName}
                     onChange={(event) =>
                       setFormData((prev) => ({
                         ...prev,
-                        companyName: event.target.value,
+                        organizationName: event.target.value,
                       }))
                     }
                     className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="mb-2 block text-sm font-medium text-slate-300">
+                  Designation
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={formData.designation}
+                  onChange={(event) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      designation: event.target.value,
+                    }))
+                  }
+                  placeholder="e.g. Backend Developer, Team Lead, Final Year Project Owner"
+                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
+                />
               </div>
 
               <div className="grid gap-5 md:grid-cols-2">
@@ -222,8 +245,8 @@ export default function ExperienceModal({
                   </label>
                   <input
                     type="date"
-                    required={!formData.isCurrentJob}
-                    disabled={formData.isCurrentJob}
+                    required={!formData.isCurrentProject}
+                    disabled={formData.isCurrentProject}
                     value={formData.endDate ?? ""}
                     onChange={(event) =>
                       setFormData((prev) => ({
@@ -240,35 +263,56 @@ export default function ExperienceModal({
                 <input
                   type="checkbox"
                   className="h-4 w-4 accent-blue-600"
-                  checked={formData.isCurrentJob}
+                  checked={formData.isCurrentProject}
                   onChange={(event) =>
                     setFormData((prev) => ({
                       ...prev,
-                      isCurrentJob: event.target.checked,
+                      isCurrentProject: event.target.checked,
                       endDate: event.target.checked ? "" : prev.endDate,
                     }))
                   }
                 />
-                <span>I currently work here</span>
+                <span>This is my current project</span>
               </label>
 
-              <div>
-                <label className="mb-2 block text-sm font-medium text-slate-300">
-                  Location
-                </label>
-                <input
-                  type="text"
-                  required
-                  value={formData.location}
-                  onChange={(event) =>
-                    setFormData((prev) => ({
-                      ...prev,
-                      location: event.target.value,
-                    }))
-                  }
-                  placeholder="e.g. Bangalore, India"
-                  className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
-                />
+              <div className="grid gap-5 md:grid-cols-2">
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
+                    GitHub Link
+                    <span className="ml-2 text-xs text-slate-500">(Optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.githubLink ?? ""}
+                    onChange={(event) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        githubLink: event.target.value,
+                      }))
+                    }
+                    placeholder="https://github.com/..."
+                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="mb-2 block text-sm font-medium text-slate-300">
+                    Live Link
+                    <span className="ml-2 text-xs text-slate-500">(Optional)</span>
+                  </label>
+                  <input
+                    type="url"
+                    value={formData.liveLink ?? ""}
+                    onChange={(event) =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        liveLink: event.target.value,
+                      }))
+                    }
+                    placeholder="https://your-project.com"
+                    className="w-full rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
+                  />
+                </div>
               </div>
 
               <div>
@@ -285,7 +329,7 @@ export default function ExperienceModal({
                       description: event.target.value,
                     }))
                   }
-                  placeholder="Describe your responsibilities, impact, and achievements..."
+                  placeholder="Describe the project, your role, impact, and what you built..."
                   className="w-full resize-none rounded-2xl border border-slate-700 bg-slate-950 px-4 py-3 text-white outline-none transition-colors focus:border-blue-500"
                 />
               </div>
@@ -295,7 +339,7 @@ export default function ExperienceModal({
                   <div>
                     <p className="text-sm font-medium text-slate-200">Linked Skills</p>
                     <p className="mt-1 text-xs text-slate-500">
-                      Attach any matching skills from the selected profile.
+                      Attach technologies already saved for the selected profile.
                     </p>
                   </div>
 
@@ -372,7 +416,7 @@ export default function ExperienceModal({
                     : "Creating..."
                   : initialData
                     ? "Save Changes"
-                    : "Create Experience"}
+                    : "Create Project"}
               </button>
             </div>
           </div>

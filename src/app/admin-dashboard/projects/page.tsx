@@ -2,23 +2,28 @@
 
 import { useEffect, useState } from "react";
 import AdminProfileSelector from "@/components/AdminProfileSelector";
-import { EditIcon, TrashIcon } from "@/components/AdminActionIcons";
-import ExperienceModal from "@/components/ExperienceModal";
+import {
+  EditIcon,
+  ExternalLinkIcon,
+  GithubIcon,
+  TrashIcon,
+} from "@/components/AdminActionIcons";
+import ProjectModal from "@/components/ProjectModal";
 import useAdminProfileSelection from "@/hooks/useAdminProfileSelection";
 import {
-  addExperience,
-  deleteExperience,
-  Experience,
-  getAdminExperiences,
-  updateExperience,
-} from "@/services/experienceService";
+  addProject,
+  deleteProject,
+  getAdminProjects,
+  Project,
+  updateProject,
+} from "@/services/projectService";
 
 const monthNames = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
   "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
 ];
 
-const formatExperienceDate = (value: string | null) => {
+const formatProjectDate = (value: string | null) => {
   if (!value) return "Present";
   if (!value.includes("-")) return value;
 
@@ -30,13 +35,13 @@ const formatExperienceDate = (value: string | null) => {
   return `${monthNames[month - 1]} ${year}`;
 };
 
-const getCompanyMonogram = (companyName: string) => {
-  const parts = companyName.trim().split(/\s+/).filter(Boolean).slice(0, 2);
-  if (parts.length === 0) return "EX";
+const getProjectMonogram = (projectName: string) => {
+  const parts = projectName.trim().split(/\s+/).filter(Boolean).slice(0, 2);
+  if (parts.length === 0) return "PR";
   return parts.map((part) => part[0]?.toUpperCase() ?? "").join("");
 };
 
-export default function ExperiencePage() {
+export default function ProjectsPage() {
   const {
     profiles,
     selectedProfile,
@@ -46,52 +51,54 @@ export default function ExperiencePage() {
     profilesError,
   } = useAdminProfileSelection();
 
-  const [experiences, setExperiences] = useState<Experience[]>([]);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [pageMessage, setPageMessage] = useState("");
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [editingExperience, setEditingExperience] = useState<Experience | null>(null);
+  const [editingProject, setEditingProject] = useState<Project | null>(null);
   const [modalError, setModalError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [isDeletingId, setIsDeletingId] = useState<number | null>(null);
 
-  const loadExperiences = async (profileId?: number | null) => {
+  const loadProjects = async (profileId?: number | null) => {
     if (!profileId) {
-      setExperiences([]);
+      setProjects([]);
       setIsLoading(false);
       return;
     }
 
     try {
       setIsLoading(true);
-      const data = await getAdminExperiences(profileId);
-      setExperiences(data);
+      const data = await getAdminProjects(profileId);
+      setProjects(data);
     } catch (error) {
-      console.error("Failed to load experiences", error);
-      setPageMessage("Unable to load experiences right now.");
+      console.error("Failed to load projects", error);
+      setPageMessage("Unable to load projects right now.");
     } finally {
       setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    loadExperiences(selectedProfileId);
+    loadProjects(selectedProfileId);
   }, [selectedProfileId]);
 
   const openCreateModal = () => {
     if (!selectedProfileId) return;
-    setEditingExperience(null);
+    setEditingProject(null);
     setModalError("");
     setIsModalOpen(true);
   };
 
-  const openEditModal = (experience: Experience) => {
-    setEditingExperience({
-      ...experience,
-      profileId: experience.profileId ?? selectedProfileId ?? undefined,
-      skills: experience.skills ?? [],
-      endDate: experience.endDate ?? null,
+  const openEditModal = (project: Project) => {
+    setEditingProject({
+      ...project,
+      profileId: project.profileId ?? selectedProfileId ?? undefined,
+      githubLink: project.githubLink ?? null,
+      liveLink: project.liveLink ?? null,
+      endDate: project.endDate ?? null,
+      skills: project.skills ?? [],
     });
     setModalError("");
     setIsModalOpen(true);
@@ -101,7 +108,7 @@ export default function ExperiencePage() {
     if (isSaving) return;
     setModalError("");
     setIsModalOpen(false);
-    setEditingExperience(null);
+    setEditingProject(null);
   };
 
   const extractErrorMessage = (error: unknown, fallback: string) => {
@@ -125,7 +132,7 @@ export default function ExperiencePage() {
     return fallback;
   };
 
-  const handleSaveExperience = async (payload: Experience) => {
+  const handleSaveProject = async (payload: Project) => {
     try {
       setIsSaving(true);
       setModalError("");
@@ -136,45 +143,45 @@ export default function ExperiencePage() {
         profileId: payload.profileId ?? selectedProfileId ?? undefined,
       };
 
-      if (editingExperience?.id) {
-        await updateExperience(editingExperience.id, finalPayload);
-        setPageMessage(`"${payload.designation}" updated successfully.`);
+      if (editingProject?.id) {
+        await updateProject(editingProject.id, finalPayload);
+        setPageMessage(`"${payload.projectName}" updated successfully.`);
       } else {
-        await addExperience(finalPayload);
-        setPageMessage(`"${payload.designation}" created successfully.`);
+        await addProject(finalPayload);
+        setPageMessage(`"${payload.projectName}" created successfully.`);
       }
 
-      await loadExperiences(selectedProfileId);
+      await loadProjects(selectedProfileId);
       setIsModalOpen(false);
-      setEditingExperience(null);
+      setEditingProject(null);
     } catch (error) {
-      console.error("Failed to save experience", error);
+      console.error("Failed to save project", error);
       setModalError(
-        extractErrorMessage(error, "Unable to save experience right now.")
+        extractErrorMessage(error, "Unable to save project right now.")
       );
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeleteExperience = async (experience: Experience) => {
-    if (!experience.id) return;
+  const handleDeleteProject = async (project: Project) => {
+    if (!project.id) return;
 
-    const confirmed = window.confirm(`Delete "${experience.designation}"?`);
+    const confirmed = window.confirm(`Delete "${project.projectName}"?`);
     if (!confirmed) return;
 
     try {
-      setIsDeletingId(experience.id);
+      setIsDeletingId(project.id);
       setPageMessage("");
 
-      await deleteExperience(experience.id);
-      await loadExperiences(selectedProfileId);
+      await deleteProject(project.id);
+      await loadProjects(selectedProfileId);
 
-      setPageMessage(`"${experience.designation}" deleted successfully.`);
+      setPageMessage(`"${project.projectName}" deleted successfully.`);
     } catch (error) {
-      console.error("Failed to delete experience", error);
+      console.error("Failed to delete project", error);
       setPageMessage(
-        extractErrorMessage(error, "Unable to delete experience right now.")
+        extractErrorMessage(error, "Unable to delete project right now.")
       );
     } finally {
       setIsDeletingId(null);
@@ -186,9 +193,9 @@ export default function ExperiencePage() {
       <div className="mx-auto w-full max-w-7xl">
         <header className="border-b border-slate-800 pb-6">
           <div className="text-center">
-            <h1 className="text-4xl font-bold tracking-tight">Work Experience</h1>
+            <h1 className="text-4xl font-bold tracking-tight">Projects</h1>
             <p className="mt-2 text-lg text-slate-400">
-              Manage the selected profile&apos;s timeline
+              Manage builds for the selected profile
             </p>
           </div>
 
@@ -209,7 +216,7 @@ export default function ExperiencePage() {
               disabled={!selectedProfileId}
               className="rounded-lg bg-blue-600 px-5 py-3 font-semibold text-white transition-colors hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-60"
             >
-              + Add Experience
+              + Add Project
             </button>
           </div>
         </header>
@@ -222,21 +229,21 @@ export default function ExperiencePage() {
 
         <section className="mt-10">
           {isLoading ? (
-            <div className="py-20 text-center text-slate-400">Loading experiences...</div>
-          ) : experiences.length === 0 ? (
+            <div className="py-20 text-center text-slate-400">Loading projects...</div>
+          ) : projects.length === 0 ? (
             <div className="py-20 text-center">
               <h2 className="text-2xl font-semibold text-white">
-                No experiences for {selectedProfile?.fullName || "this profile"}.
+                No projects for {selectedProfile?.fullName || "this profile"}.
               </h2>
               <p className="mt-3 text-slate-400">
-                Add the first role for the selected profile.
+                Add the first project for the selected profile.
               </p>
             </div>
           ) : (
             <div className="space-y-6">
-              {experiences.map((experience) => (
+              {projects.map((project) => (
                 <article
-                  key={experience.id}
+                  key={project.id}
                   className="group relative overflow-hidden rounded-[32px] border border-slate-800 bg-slate-950/60 p-6 transition-all duration-300 hover:-translate-y-1 hover:border-slate-600/70 hover:bg-slate-950/80 hover:shadow-[0_28px_70px_-34px_rgba(15,23,42,0.95)]"
                 >
                   <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top_left,_rgba(59,130,246,0.16),_transparent_45%)] opacity-70" />
@@ -244,49 +251,77 @@ export default function ExperiencePage() {
                     <div className="flex flex-col gap-6 xl:flex-row xl:items-start xl:justify-between">
                       <div className="flex items-start gap-4">
                         <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl border border-slate-800 bg-slate-900 text-sm font-semibold tracking-[0.2em] text-slate-300">
-                          {getCompanyMonogram(experience.companyName)}
+                          {getProjectMonogram(project.projectName)}
                         </div>
 
                         <div>
                           <p className="text-xs font-semibold uppercase tracking-[0.28em] text-blue-400">
-                            Work Experience
+                            Project
                           </p>
 
                           <h2 className="mt-3 text-3xl font-semibold text-white">
-                            {experience.designation}
+                            {project.projectName}
                           </h2>
 
                           <div className="mt-2 flex flex-wrap items-center gap-3 text-slate-300">
-                            <span className="text-lg">{experience.companyName}</span>
+                            <span className="text-lg">{project.organizationName}</span>
                             <span className="hidden h-1.5 w-1.5 rounded-full bg-slate-600 sm:block" />
-                            <span className="text-sm text-slate-400">{experience.location}</span>
+                            <span className="text-sm text-slate-400">{project.designation}</span>
                           </div>
                         </div>
                       </div>
 
                       <div className="flex flex-wrap items-center gap-3">
                         <span className="rounded-full border border-slate-700 bg-slate-900/80 px-4 py-2 text-xs font-medium text-slate-300">
-                          {formatExperienceDate(experience.startDate)} -{" "}
-                          {experience.isCurrentJob
+                          {formatProjectDate(project.startDate)} -{" "}
+                          {project.isCurrentProject
                             ? "Present"
-                            : formatExperienceDate(experience.endDate)}
+                            : formatProjectDate(project.endDate)}
                         </span>
 
-                        {experience.isCurrentJob && (
+                        {project.isCurrentProject && (
                           <span className="rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-2 text-xs font-medium text-emerald-300">
-                            Current Role
+                            Current Project
                           </span>
                         )}
                       </div>
                     </div>
 
                     <p className="mt-6 max-w-5xl leading-7 text-slate-300">
-                      {experience.description}
+                      {project.description}
                     </p>
 
-                    {experience.skills.length > 0 && (
+                    {(project.githubLink || project.liveLink) && (
+                      <div className="mt-6 flex flex-wrap gap-3">
+                        {project.githubLink && (
+                          <a
+                            href={project.githubLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full border border-slate-700 bg-slate-900 px-4 py-2 text-sm text-slate-200 transition-colors hover:border-slate-500 hover:text-white"
+                          >
+                            <GithubIcon className="h-4 w-4" />
+                            GitHub Repo
+                          </a>
+                        )}
+
+                        {project.liveLink && (
+                          <a
+                            href={project.liveLink}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-full border border-blue-500/25 bg-blue-500/10 px-4 py-2 text-sm text-blue-200 transition-colors hover:border-blue-400/60 hover:bg-blue-500/20 hover:text-white"
+                          >
+                            <ExternalLinkIcon className="h-4 w-4" />
+                            Live Demo
+                          </a>
+                        )}
+                      </div>
+                    )}
+
+                    {project.skills.length > 0 && (
                       <div className="mt-6 flex flex-wrap gap-2">
-                        {experience.skills.map((skill) => (
+                        {project.skills.map((skill) => (
                           <span
                             key={skill}
                             className="rounded-full border border-slate-700 bg-slate-900 px-3 py-1.5 text-sm text-slate-300"
@@ -300,19 +335,19 @@ export default function ExperiencePage() {
                     <div className="mt-6 flex items-center justify-end gap-3">
                       <button
                         type="button"
-                        onClick={() => openEditModal(experience)}
+                        onClick={() => openEditModal(project)}
                         className="flex h-12 w-12 items-center justify-center rounded-full border border-sky-500/25 bg-sky-500/10 text-sky-300 transition-colors hover:border-sky-400/60 hover:bg-sky-500/20 hover:text-sky-100"
-                        aria-label={`Edit ${experience.designation}`}
+                        aria-label={`Edit ${project.projectName}`}
                       >
                         <EditIcon className="h-5 w-5" />
                       </button>
 
                       <button
                         type="button"
-                        onClick={() => handleDeleteExperience(experience)}
-                        disabled={isDeletingId === experience.id}
+                        onClick={() => handleDeleteProject(project)}
+                        disabled={isDeletingId === project.id}
                         className="flex h-12 w-12 items-center justify-center rounded-full border border-red-500/25 bg-red-500/10 text-red-300 transition-colors hover:border-red-400/60 hover:bg-red-500/20 hover:text-red-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        aria-label={`Delete ${experience.designation}`}
+                        aria-label={`Delete ${project.projectName}`}
                       >
                         <TrashIcon className="h-5 w-5" />
                       </button>
@@ -324,14 +359,14 @@ export default function ExperiencePage() {
           )}
         </section>
 
-        <ExperienceModal
+        <ProjectModal
           isOpen={isModalOpen}
           isSubmitting={isSaving}
           errorMessage={modalError}
           profileId={selectedProfileId}
           onClose={closeModal}
-          onSave={handleSaveExperience}
-          initialData={editingExperience}
+          onSave={handleSaveProject}
+          initialData={editingProject}
         />
       </div>
     </main>

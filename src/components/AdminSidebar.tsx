@@ -22,7 +22,15 @@ export default function AdminSidebar({ isOpen, toggleSidebar }: SidebarProps) {
 
       {/* Header & Toggle Button */}
       <div className="flex items-center justify-between p-4 mb-6 mt-2">
-        {isOpen && <h2 className="text-xl font-bold text-white tracking-wide whitespace-nowrap overflow-hidden">SHUBHAM PATEL</h2>}
+        {isOpen && (
+          <Link
+            href="/admin-dashboard"
+            className="text-xl font-bold text-white tracking-wide whitespace-nowrap overflow-hidden transition-colors hover:text-blue-400"
+          >
+            SHUBHAM PATEL
+          </Link>
+        )}
+
         <button
           onClick={toggleSidebar}
           className="p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
@@ -30,6 +38,7 @@ export default function AdminSidebar({ isOpen, toggleSidebar }: SidebarProps) {
           ☰
         </button>
       </div>
+
 
       <nav className="flex-1 space-y-2 px-2">
         {/* Master Creation Dropdown */}
@@ -52,6 +61,9 @@ export default function AdminSidebar({ isOpen, toggleSidebar }: SidebarProps) {
             <div className="flex flex-col space-y-1 border-l border-slate-700 ml-5 pl-4">
               <Link href="/admin-dashboard/experience" className={`py-2 rounded-lg text-sm transition-colors duration-200 whitespace-nowrap ${isActive('/admin-dashboard/experience')}`}>
                 💼 Experience
+              </Link>
+              <Link href="/admin-dashboard/projects" className={`py-2 rounded-lg text-sm transition-colors duration-200 whitespace-nowrap ${isActive('/admin-dashboard/projects')}`}>
+                🚀 Project
               </Link>
               <Link href="/admin-dashboard/skills" className={`py-2 rounded-lg text-sm transition-colors duration-200 whitespace-nowrap ${isActive('/admin-dashboard/skills')}`}>
                 🧠 Skills

@@ -1,41 +1,73 @@
-import api from './api';
+import api from "./api";
 
-// 1. Define the data structure matching your Java backend
 export interface Experience {
   id?: number;
   designation: string;
   companyName: string;
+  companyLogoUrl?: string | null;
   location: string;
   description: string;
-  startDate: string; // Expected format: YYYY-MM-DD
-  endDate: string | null; // We will send null if it's the current job
+  startDate: string;
+  endDate: string | null;
   isCurrentJob: boolean;
-  skills: string[]; // We will send an array of skill names or IDs
+  profileId?: number;
+  skills: string[];
 }
 
-// 2. Define the base path from your Admin Controller
-const BASE_URL = '/v1/admin/experiences';
+export interface PublicExperienceItem {
+  id: number;
+  designation: string;
+  companyName: string;
+  companyLogoUrl?: string | null;
+  location: string;
+  description: string;
+  startDate: string;
+  endDate: string;
+  isCurrentJob: boolean;
+  skills: string[];
+}
 
-// Fetch all experiences for the dashboard
-export const getExperiences = async (): Promise<Experience[]> => {
-  const response = await api.get(BASE_URL);
-  return response.data;
+const ADMIN_BASE_URL = "/admin/experiences";
+const PUBLIC_BASE_URL = "/public/experiences";
+
+const normalizeExperience = (experience: Experience): Experience => ({
+  ...experience,
+  endDate: experience.endDate ?? null,
+  skills: experience.skills ?? [],
+});
+
+export const getAdminExperiences = async (
+  profileId?: number
+): Promise<Experience[]> => {
+  const response = await api.get<Experience[]>(ADMIN_BASE_URL, {
+    params: profileId ? { profileId } : {},
+  });
+
+  return (response.data ?? []).map(normalizeExperience);
 };
 
-// Add a new experience
+export const getExperienceTimeline = async (): Promise<PublicExperienceItem[]> => {
+  const response = await api.get<PublicExperienceItem[]>(PUBLIC_BASE_URL);
+
+  return (response.data ?? []).map((experience) => ({
+    ...experience,
+    skills: experience.skills ?? [],
+  }));
+};
+
 export const addExperience = async (data: Experience): Promise<Experience> => {
-  const response = await api.post(`${BASE_URL}/add`, data);
-  return response.data;
+  const response = await api.post<Experience>(ADMIN_BASE_URL, data);
+  return normalizeExperience(response.data);
 };
 
-// Update an existing experience (We will build this in Java later!)
-export const updateExperience = async (id: number, data: Experience): Promise<Experience> => {
-  // Using PUT is the standard for updating full records
-  const response = await api.put(`${BASE_URL}/${id}`, data);
-  return response.data;
+export const updateExperience = async (
+  id: number,
+  data: Experience
+): Promise<Experience> => {
+  const response = await api.put<Experience>(`${ADMIN_BASE_URL}/${id}`, data);
+  return normalizeExperience(response.data);
 };
 
-// Delete an experience
 export const deleteExperience = async (id: number): Promise<void> => {
-  await api.delete(`${BASE_URL}/${id}`);
+  await api.delete(`${ADMIN_BASE_URL}/${id}`);
 };
