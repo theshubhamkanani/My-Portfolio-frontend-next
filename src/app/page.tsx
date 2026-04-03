@@ -616,17 +616,35 @@ export default function HomePage() {
   }, []);
 
   useEffect(() => {
-    const handleScroll = () => {
+    let frameId: number | null = null;
+
+    const updateScrollProgress = () => {
       const totalHeight = document.documentElement.scrollHeight - window.innerHeight;
       const progress = totalHeight <= 0 ? 0 : (window.scrollY / totalHeight) * 100;
-      setScrollProgress(progress);
+
+      setScrollProgress((prev) =>
+        Math.abs(prev - progress) < 0.5 ? prev : progress
+      );
+
+      frameId = null;
     };
 
-    handleScroll();
+    const handleScroll = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(updateScrollProgress);
+    };
+
+    updateScrollProgress();
     window.addEventListener("scroll", handleScroll, { passive: true });
 
-    return () => window.removeEventListener("scroll", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
+    };
   }, []);
+
 
   useEffect(() => {
     if (!isMobileNavOpen) {
@@ -645,6 +663,7 @@ export default function HomePage() {
     if (!portfolio) return;
 
     const sectionIds = NAV_ITEMS.map((item) => item.id);
+    let frameId: number | null = null;
 
     const updateActiveSection = () => {
       const headerOffset = 140;
@@ -661,19 +680,30 @@ export default function HomePage() {
         }
       }
 
-      setActiveSection(currentSection);
+      setActiveSection((prev) => (prev === currentSection ? prev : currentSection));
+      frameId = null;
+    };
+
+    const handleViewportChange = () => {
+      if (frameId !== null) return;
+      frameId = window.requestAnimationFrame(updateActiveSection);
     };
 
     updateActiveSection();
 
-    window.addEventListener("scroll", updateActiveSection, { passive: true });
-    window.addEventListener("resize", updateActiveSection);
+    window.addEventListener("scroll", handleViewportChange, { passive: true });
+    window.addEventListener("resize", handleViewportChange);
 
     return () => {
-      window.removeEventListener("scroll", updateActiveSection);
-      window.removeEventListener("resize", updateActiveSection);
+      window.removeEventListener("scroll", handleViewportChange);
+      window.removeEventListener("resize", handleViewportChange);
+
+      if (frameId !== null) {
+        window.cancelAnimationFrame(frameId);
+      }
     };
   }, [portfolio]);
+
 
 
   const profile = portfolio?.profile ?? emptyProfile();
@@ -2151,6 +2181,51 @@ export default function HomePage() {
               linear-gradient(180deg, #08111b 0%, #0a1320 52%, #0a1119 100%);
           }
         }
+
+        @media (max-width: 767px) {
+          .portfolio-page [class*="blur-3xl"] {
+            display: none !important;
+          }
+
+          .portfolio-page .backdrop-blur-xl,
+          .portfolio-page .backdrop-blur-2xl {
+            backdrop-filter: none !important;
+            -webkit-backdrop-filter: none !important;
+          }
+
+          .portfolio-grid {
+            mask-image: none;
+            opacity: 0.1;
+          }
+
+          .portfolio-drift,
+          .portfolio-float,
+          .portfolio-sweep {
+            animation: none !important;
+          }
+
+          .portfolio-skill-fill {
+            animation: none !important;
+            width: var(--skill-width) !important;
+          }
+
+          .portfolio-reveal,
+          .portfolio-reveal.is-visible {
+            filter: none;
+          }
+
+          .portfolio-reveal {
+            transform: translateY(18px) scale(1);
+            transition:
+              opacity 0.42s ease-out,
+              transform 0.42s ease-out;
+          }
+
+          .portfolio-card-glow:hover {
+            transform: none;
+            box-shadow: 0 24px 80px -42px rgba(0, 0, 0, 0.92);
+          }
+        }              
 
         @keyframes portfolio-spin {
           to {
