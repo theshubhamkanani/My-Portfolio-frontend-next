@@ -550,6 +550,7 @@ export default function HomePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [feedback, setFeedback] = useState("");
   const [isError, setIsError] = useState(false);
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
   const loadPortfolio = async () => {
     const startedAt = Date.now();
@@ -626,6 +627,19 @@ export default function HomePage() {
 
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  useEffect(() => {
+    if (!isMobileNavOpen) {
+      document.body.classList.remove("portfolio-mobile-lock");
+      return;
+    }
+
+    document.body.classList.add("portfolio-mobile-lock");
+
+    return () => {
+      document.body.classList.remove("portfolio-mobile-lock");
+    };
+  }, [isMobileNavOpen]);
 
   useEffect(() => {
     if (!portfolio) return;
@@ -829,6 +843,7 @@ export default function HomePage() {
   const scrollToSection = (sectionId: string) => {
     const node = document.getElementById(sectionId);
     if (!node) return;
+    setIsMobileNavOpen(false);
     node.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
@@ -877,6 +892,8 @@ export default function HomePage() {
     );
   }
 
+  const closeMobileNav = () => setIsMobileNavOpen(false);
+
   return (
     <>
       <main
@@ -901,12 +918,15 @@ export default function HomePage() {
           />
         </div>
 
-        <header className="fixed inset-x-0 top-0 z-[80] px-3 pt-3 sm:px-6 lg:px-8">
-          <div className="mx-auto max-w-7xl rounded-[28px] border border-white/10 bg-[rgba(8,17,27,0.78)] px-3 py-3 shadow-[0_22px_70px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl sm:px-5">
-            <div className="flex items-center justify-between gap-3">
+        <header className="fixed inset-x-0 top-0 z-[80] px-4 pt-4 sm:px-6 lg:px-8">
+          <div className="mx-auto max-w-7xl rounded-[30px] border border-white/10 bg-[rgba(8,17,27,0.72)] px-4 py-3 shadow-[0_22px_70px_-40px_rgba(0,0,0,0.9)] backdrop-blur-2xl sm:px-5">
+            <div className="flex items-center justify-between gap-4 lg:hidden">
               <button
                 type="button"
-                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                onClick={() => {
+                  closeMobileNav();
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }}
                 className="flex min-w-0 items-center gap-3"
               >
                 <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-sm font-semibold text-[var(--portfolio-sand)]">
@@ -922,29 +942,115 @@ export default function HomePage() {
 
               <button
                 type="button"
-                onClick={() => scrollToSection("contact")}
-                className="shrink-0 rounded-full bg-[linear-gradient(135deg,var(--portfolio-accent),var(--portfolio-accent-2))] px-4 py-3 text-xs font-semibold leading-tight text-[#091017] transition-transform duration-300 hover:-translate-y-0.5 sm:px-5 sm:text-sm"
+                aria-label={isMobileNavOpen ? "Close navigation menu" : "Open navigation menu"}
+                aria-expanded={isMobileNavOpen}
+                onClick={() => setIsMobileNavOpen((open) => !open)}
+                className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/10 bg-white/[0.03] text-[var(--portfolio-text)] transition-colors duration-300 hover:bg-white/[0.08]"
               >
-                Start a Conversation
+                <span className="relative flex h-4 w-5 flex-col items-center justify-between">
+                  <span
+                    className={cn(
+                      "block h-[2px] w-full rounded-full bg-current transition-all duration-300",
+                      isMobileNavOpen && "translate-y-[7px] rotate-45"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "block h-[2px] w-full rounded-full bg-current transition-all duration-300",
+                      isMobileNavOpen && "opacity-0"
+                    )}
+                  />
+                  <span
+                    className={cn(
+                      "block h-[2px] w-full rounded-full bg-current transition-all duration-300",
+                      isMobileNavOpen && "-translate-y-[7px] -rotate-45"
+                    )}
+                  />
+                </span>
               </button>
             </div>
 
-            <div className="portfolio-no-scrollbar mt-3 flex items-center gap-2 overflow-x-auto pb-1 sm:mt-4">
-              {NAV_ITEMS.map((item) => (
+            <div className="hidden items-center justify-between gap-4 lg:flex">
+              <button
+                type="button"
+                onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+                className="flex items-center gap-3"
+              >
+                <span className="flex h-11 w-11 items-center justify-center rounded-full border border-white/10 bg-white/[0.05] text-sm font-semibold text-[var(--portfolio-sand)]">
+                  {profileMonogram}
+                </span>
+
+                <div className="text-left">
+                  <p className="portfolio-mono text-[10px] uppercase tracking-[0.28em] text-[var(--portfolio-muted)]">
+                    Live Portfolio
+                  </p>
+                  <p className="text-sm font-medium text-[var(--portfolio-text)]">
+                    {displayName}
+                  </p>
+                </div>
+              </button>
+
+              <div className="portfolio-no-scrollbar flex flex-1 items-center justify-end gap-2 overflow-x-auto">
+                {NAV_ITEMS.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => scrollToSection(item.id)}
+                    className={cn(
+                      "whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300",
+                      activeSection === item.id
+                        ? "bg-white/[0.08] text-[var(--portfolio-text)] shadow-[0_0_0_1px_rgba(255,255,255,0.1)]"
+                        : "text-[var(--portfolio-muted)] hover:bg-white/[0.05] hover:text-[var(--portfolio-text)]"
+                    )}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+
                 <button
-                  key={item.id}
                   type="button"
-                  onClick={() => scrollToSection(item.id)}
-                  className={cn(
-                    "shrink-0 whitespace-nowrap rounded-full px-4 py-2.5 text-sm font-medium transition-all duration-300",
-                    activeSection === item.id
-                      ? "bg-white/[0.08] text-[var(--portfolio-text)] shadow-[0_0_0_1px_rgba(255,255,255,0.1)]"
-                      : "text-[var(--portfolio-muted)] hover:bg-white/[0.05] hover:text-[var(--portfolio-text)]"
-                  )}
+                  onClick={() => scrollToSection("contact")}
+                  className="ml-1 inline-flex items-center justify-center rounded-full bg-[linear-gradient(135deg,var(--portfolio-accent),var(--portfolio-accent-2))] px-4 py-2.5 text-sm font-semibold text-[#091017] transition-transform duration-300 hover:-translate-y-0.5"
                 >
-                  {item.label}
+                  Start a Conversation
                 </button>
-              ))}
+              </div>
+            </div>
+
+            <div
+              className={cn(
+                "overflow-hidden transition-all duration-300 lg:hidden",
+                isMobileNavOpen ? "mt-4 max-h-[30rem] opacity-100" : "max-h-0 opacity-0"
+              )}
+            >
+              <div className="rounded-[24px] border border-white/8 bg-[#0d1620]/90 p-3">
+                <div className="space-y-2">
+                  {NAV_ITEMS.map((item) => (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => scrollToSection(item.id)}
+                      className={cn(
+                        "flex w-full items-center justify-between rounded-2xl px-4 py-3 text-left text-sm font-medium transition-all duration-300",
+                        activeSection === item.id
+                          ? "bg-white/[0.08] text-[var(--portfolio-text)] shadow-[0_0_0_1px_rgba(255,255,255,0.08)]"
+                          : "text-[var(--portfolio-muted)] hover:bg-white/[0.05] hover:text-[var(--portfolio-text)]"
+                      )}
+                    >
+                      <span>{item.label}</span>
+                      <span className="text-lg leading-none">›</span>
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => scrollToSection("contact")}
+                  className="mt-3 inline-flex w-full items-center justify-center rounded-2xl bg-[linear-gradient(135deg,var(--portfolio-accent),var(--portfolio-accent-2))] px-4 py-3.5 text-sm font-semibold text-[#091017] transition-transform duration-300 hover:-translate-y-0.5"
+                >
+                  Start a Conversation
+                </button>
+              </div>
             </div>
           </div>
         </header>
@@ -953,7 +1059,7 @@ export default function HomePage() {
         <section
           id="home"
           data-section="home"
-          className="scroll-mt-32 px-4 pb-20 pt-44 sm:px-8 sm:pb-24 sm:pt-36 lg:px-10 lg:pb-28 lg:pt-40"
+          className="scroll-mt-32 px-4 pb-20 pt-36 sm:px-8 sm:pb-24 sm:pt-36 lg:px-10 lg:pb-28 lg:pt-40"
         >
           <div className="mx-auto grid max-w-7xl gap-14 lg:grid-cols-[1.02fr_0.98fr] lg:items-center">
             <Reveal className="space-y-8">
@@ -970,7 +1076,7 @@ export default function HomePage() {
                 <p className="portfolio-mono text-xs uppercase tracking-[0.42em] text-[var(--portfolio-muted)]">
                   Portfolio
                 </p>
-                <h1 className="max-w-5xl text-[3.2rem] font-semibold leading-[0.96] sm:text-6xl lg:text-[5.45rem]">
+                <h1 className="max-w-5xl text-[3.35rem] font-semibold leading-[0.96] sm:text-6xl lg:text-[5.45rem]">
                   <span className="block text-[var(--portfolio-text)]">Hello, I&apos;m</span>
                   <span className="mt-2 block text-[var(--portfolio-sand)] [text-shadow:0_12px_40px_rgba(245,213,154,0.08)]">
                     {heroFirstName}
@@ -1253,7 +1359,7 @@ export default function HomePage() {
         <section
           id="experience"
           data-section="experience"
-          className="scroll-mt-28 px-6 py-20 sm:px-8 lg:px-10 lg:py-28"
+          className="scroll-mt-32 px-4 py-20 sm:px-8 lg:px-10 lg:py-28"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal>
@@ -1353,7 +1459,7 @@ export default function HomePage() {
         <section
           id="projects"
           data-section="projects"
-          className="scroll-mt-28 px-6 py-20 sm:px-8 lg:px-10 lg:py-28"
+          className="scroll-mt-32 px-4 py-20 sm:px-8 lg:px-10 lg:py-28"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal>
@@ -1542,7 +1648,7 @@ export default function HomePage() {
         <section
           id="skills"
           data-section="skills"
-          className="scroll-mt-28 px-6 py-20 sm:px-8 lg:px-10 lg:py-28"
+          className="scroll-mt-32 px-4 py-20 sm:px-8 lg:px-10 lg:py-28"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal>
@@ -1619,7 +1725,7 @@ export default function HomePage() {
         <section
           id="education"
           data-section="education"
-          className="scroll-mt-28 px-6 py-20 sm:px-8 lg:px-10 lg:py-28"
+          className="scroll-mt-32 px-4 py-20 sm:px-8 lg:px-10 lg:py-28"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal>
@@ -1669,7 +1775,7 @@ export default function HomePage() {
         <section
           id="contact"
           data-section="contact"
-          className="scroll-mt-28 px-6 py-20 sm:px-8 lg:px-10 lg:py-28"
+          className="scroll-mt-32 px-4 py-20 sm:px-8 lg:px-10 lg:py-28"
         >
           <div className="mx-auto max-w-7xl">
             <Reveal>
@@ -1886,6 +1992,9 @@ export default function HomePage() {
       </main>
 
       <style jsx global>{`
+        body.portfolio-mobile-lock {
+          overflow: hidden;
+        }
         html {
           scroll-behavior: smooth;
         }
@@ -2032,6 +2141,15 @@ export default function HomePage() {
         .portfolio-skill-fill {
           width: 0;
           animation: portfolio-skill-grow 1.05s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+        }
+
+        @media (max-width: 1023px) {
+          .portfolio-page {
+            background:
+              radial-gradient(circle at top left, rgba(115, 228, 202, 0.12), transparent 34%),
+              radial-gradient(circle at 88% 12%, rgba(255, 157, 115, 0.12), transparent 28%),
+              linear-gradient(180deg, #08111b 0%, #0a1320 52%, #0a1119 100%);
+          }
         }
 
         @keyframes portfolio-spin {
