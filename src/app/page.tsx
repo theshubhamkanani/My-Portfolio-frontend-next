@@ -176,21 +176,40 @@ const getReadableLink = (link?: string | null) => {
 
 const parseDateToken = (value?: string | null) => {
   if (!value) return null;
-  const direct = Date.parse(value);
-  if (!Number.isNaN(direct)) return direct;
 
-  if (/^\d{4}-\d{2}$/.test(value)) {
-    const parsed = Date.parse(`${value}-01`);
-    return Number.isNaN(parsed) ? null : parsed;
+  const normalized = value.trim();
+  if (!normalized) return null;
+
+  if (/^\d{4}-\d{2}-\d{2}$/.test(normalized)) {
+    const [year, month, day] = normalized.split("-").map(Number);
+    return Date.UTC(year, month - 1, day);
   }
 
-  if (/^\d{4}$/.test(value)) {
-    const parsed = Date.parse(`${value}-01-01`);
-    return Number.isNaN(parsed) ? null : parsed;
+  if (/^\d{4}-\d{2}$/.test(normalized)) {
+    const [year, month] = normalized.split("-").map(Number);
+    return Date.UTC(year, month - 1, 1);
   }
 
-  return null;
+  if (/^\d{4}$/.test(normalized)) {
+    return Date.UTC(Number(normalized), 0, 1);
+  }
+
+  const monthYearMatch = normalized.match(/^([A-Za-z]+)\s+(\d{4})$/);
+  if (monthYearMatch) {
+    const [, monthName, yearValue] = monthYearMatch;
+    const monthIndex = MONTH_NAMES.findIndex(
+      (month) => month.toLowerCase() === monthName.toLowerCase()
+    );
+
+    if (monthIndex !== -1) {
+      return Date.UTC(Number(yearValue), monthIndex, 1);
+    }
+  }
+
+  const fallback = Date.parse(normalized);
+  return Number.isNaN(fallback) ? null : fallback;
 };
+
 
 const formatTimelineDate = (value?: string | null) => {
   if (!value) return "Present";
